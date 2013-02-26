@@ -4,9 +4,9 @@
 #include <ruby.h>
 
 #include "coherence/lang.ns"
-#include "coherence/net/CacheFactory.hpp"
-#include "coherence/net/NamedCache.hpp"
-#include "coherence/util/Iterator.hpp"
+#include "coherence/util.ns"
+#include "coherence/net.ns"
+#include "coherence/net/cache.ns"
 
 #include <iostream>
 

@@ -1,9 +1,9 @@
 #include <rcoherence.h>
 
 using namespace coherence::lang;
-using coherence::net::CacheFactory;
-using coherence::net::NamedCache;
-using coherence::util::Iterator;
+using namespace coherence::util;
+using namespace coherence::net;
+using namespace coherence::net::cache;
 
 static NamedCache::Handle getCache(VALUE vself) {
   String::View vsCacheName = RSTRING_PTR(rb_iv_get(vself, "@cache_name"));
@@ -19,6 +19,33 @@ static VALUE cNamedCache_put(VALUE vself, VALUE vkey, VALUE vval){
 
   try {
     hCache->put(vsKey, vsValue);
+  } catch (const std::exception& e) {
+    // don't throw anything just yet
+    // std::cerr << "error: " << e.what() << std::endl;
+  }
+
+  return Qtrue;
+}
+
+static VALUE cNamedCache_putAll(VALUE vself, VALUE vhash){
+  NamedCache::Handle hCache = getCache(vself);
+  VALUE vkeys, vkey, vval;
+  int i, num;
+
+  typedef TypedCollections::TypedMap<String::View, String::View> StringStringMap;
+  StringStringMap::Handle hMap = StringStringMap::create(HashMap::create());
+
+  // there absolutely has to be a better way to iterate a ruby hash.
+  vkeys = rb_funcall(vhash, rb_intern("keys"), 0);
+  num = RARRAY_LEN(vkeys);
+  for(i = 0; i < num; i++){
+    vkey = rb_ary_entry(vkeys, i);
+    vval = rb_hash_aref(vhash, vkey);
+    hMap->put(RSTRING_PTR(vkey), RSTRING_PTR(vval));
+  }
+
+  try {
+    hCache->putAll(hMap);
   } catch (const std::exception& e) {
     // don't throw anything just yet
     // std::cerr << "error: " << e.what() << std::endl;
@@ -121,6 +148,24 @@ static VALUE cNamedCache_each(VALUE vself){
   return vrv;
 }
 
+static VALUE cNamedCache_has_key(VALUE vself, VALUE vkey){
+  NamedCache::Handle hCache = getCache(vself);
+
+  String::View vsKey = RSTRING_PTR(vkey);
+  VALUE vres = hCache->containsKey(vsKey) ? Qtrue : Qfalse;
+
+  return vres;
+}
+
+static VALUE cNamedCache_has_value(VALUE vself, VALUE vval){
+  NamedCache::Handle hCache = getCache(vself);
+
+  String::View vValue = RSTRING_PTR(vval);
+  VALUE vres = hCache->containsValue(vValue) ? Qtrue : Qfalse;
+
+  return vres;
+}
+
 static VALUE cNamedCache_initialize(int argc, VALUE *argv, VALUE vself){
   VALUE cache_name;
 
@@ -143,6 +188,7 @@ extern "C" void Init_coherence() {
 
   rb_define_method(cNamedCache, "put", (VALUE(*)(...))cNamedCache_put, 2);
   rb_define_alias(cNamedCache, "[]=", "put");
+  rb_define_method(cNamedCache, "putAll", (VALUE(*)(...))cNamedCache_putAll, 1);
   rb_define_method(cNamedCache, "get", (VALUE(*)(...))cNamedCache_get, 1);
   rb_define_alias(cNamedCache, "[]", "get");
   rb_define_method(cNamedCache, "size", (VALUE(*)(...))cNamedCache_size, 0);
@@ -151,4 +197,7 @@ extern "C" void Init_coherence() {
   rb_define_method(cNamedCache, "keys", (VALUE(*)(...))cNamedCache_keys, 0);
   rb_define_method(cNamedCache, "values", (VALUE(*)(...))cNamedCache_values, 0);
   rb_define_method(cNamedCache, "each", (VALUE(*)(...))cNamedCache_each, 0);
+  rb_define_method(cNamedCache, "has_key?", (VALUE(*)(...))cNamedCache_has_key, 1);
+  rb_define_alias(cNamedCache, "include?", "has_key?");
+  rb_define_method(cNamedCache, "has_value?", (VALUE(*)(...))cNamedCache_has_value, 1);
 }
