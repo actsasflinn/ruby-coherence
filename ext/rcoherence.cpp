@@ -120,11 +120,10 @@ static VALUE cNamedCache_keys(VALUE vself){
   VALUE vary = rb_ary_new();
   NamedCache::Handle hCache = getCache(vself);
 
-  for (Iterator::Handle hIter = hCache->entrySet()->iterator();
+  for (Iterator::Handle hIter = hCache->keySet()->iterator();
        hIter->hasNext(); )
   {
-    Map::Entry::View vEntry = cast<Map::Entry::View>(hIter->next());
-    String::View vKey = cast<String::View>(vEntry->getKey());
+    String::View vKey = cast<String::View>(hIter->next());
     rb_ary_push(vary, rb_str_new2(vKey->getCString()));
   }
 
