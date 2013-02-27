@@ -182,6 +182,28 @@ static VALUE cNamedCache_has_value(VALUE vself, VALUE vval){
   return vres;
 }
 
+static VALUE cNamedCache_lock(int argc, VALUE *argv, VALUE vself){
+  VALUE vkey, vtimeout;
+  rb_scan_args(argc, argv, "11", &vkey, &vtimeout);
+  int timeout = vtimeout == Qnil ? -1 : NUM2INT(vtimeout);
+
+  NamedCache::Handle hCache = getCache(vself);
+
+  String::View vsKey = RSTRING_PTR(vkey);
+  VALUE vres = hCache->lock(vsKey, timeout) ? Qtrue : Qfalse;
+
+  return vres;
+}
+
+static VALUE cNamedCache_unlock(VALUE vself, VALUE vkey){
+  NamedCache::Handle hCache = getCache(vself);
+
+  String::View vsKey = RSTRING_PTR(vkey);
+  VALUE vres = hCache->unlock(vsKey) ? Qtrue : Qfalse;
+
+  return vres;
+}
+
 static VALUE cNamedCache_initialize(int argc, VALUE *argv, VALUE vself){
   VALUE cache_name;
 
@@ -217,4 +239,6 @@ extern "C" void Init_coherence() {
   rb_define_method(cNamedCache, "has_key?", (VALUE(*)(...))cNamedCache_has_key, 1);
   rb_define_alias(cNamedCache, "include?", "has_key?");
   rb_define_method(cNamedCache, "has_value?", (VALUE(*)(...))cNamedCache_has_value, 1);
+  rb_define_method(cNamedCache, "lock", (VALUE(*)(...))cNamedCache_lock, -1);
+  rb_define_method(cNamedCache, "unlock", (VALUE(*)(...))cNamedCache_unlock, 1);
 }

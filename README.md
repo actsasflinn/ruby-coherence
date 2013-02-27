@@ -41,6 +41,8 @@ API
 * each
 * has_key?, include?
 * has_value?
+* lock
+* unlock
 
 TODO
 ====
@@ -60,7 +62,6 @@ TODO
 * getHostName() : InetAddress , InetSocketAddress
 * getInfo
 * removeAll
-* lock
 * load
 * filters or cohql
 * POF for Ruby Object, can it be done?
