@@ -32,6 +32,7 @@ API
 * put, []=
 * putAll
 * get, []
+* getAll
 * size
 * clear
 * delete
@@ -45,7 +46,6 @@ TODO
 ====
 
 * CacheInfo
-* getAll
 * increment
 * decrement
 * insert

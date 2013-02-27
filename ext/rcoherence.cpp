@@ -70,6 +70,22 @@ static VALUE cNamedCache_get(VALUE vself, VALUE vkey){
   return vval;
 }
 
+static VALUE cNamedCache_getAll(VALUE vself){
+  NamedCache::Handle hCache = getCache(vself);
+  VALUE vhash = rb_hash_new();
+
+  for (Iterator::Handle hIter = hCache->entrySet()->iterator();
+       hIter->hasNext(); )
+  {
+    Map::Entry::View vEntry = cast<Map::Entry::View>(hIter->next());
+    String::View vKey = cast<String::View>(vEntry->getKey());
+    String::View vValue = cast<String::View>(vEntry->getValue());
+    rb_hash_aset(vhash, rb_str_new2(vKey->getCString()), rb_str_new2(vValue->getCString()));
+  }
+
+  return vhash;
+}
+
 static VALUE cNamedCache_delete(VALUE vself, VALUE vkey){
   NamedCache::Handle hCache = getCache(vself);
 
@@ -191,6 +207,7 @@ extern "C" void Init_coherence() {
   rb_define_method(cNamedCache, "putAll", (VALUE(*)(...))cNamedCache_putAll, 1);
   rb_define_method(cNamedCache, "get", (VALUE(*)(...))cNamedCache_get, 1);
   rb_define_alias(cNamedCache, "[]", "get");
+  rb_define_method(cNamedCache, "getAll", (VALUE(*)(...))cNamedCache_getAll, 0);
   rb_define_method(cNamedCache, "size", (VALUE(*)(...))cNamedCache_size, 0);
   rb_define_method(cNamedCache, "clear", (VALUE(*)(...))cNamedCache_clear, 0);
   rb_define_method(cNamedCache, "delete", (VALUE(*)(...))cNamedCache_delete, 1);
